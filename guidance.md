@@ -11,6 +11,7 @@ Since a customer has no control over exactly when a service they are using gets 
 *Failure to adhere to the rules for what changes can occur within an API version risk introducing incidents and live site issues for our customers. This contributes to our customers perception of the *stability* of running workloads on the Azure platform.*
 
 When service teams introduce new functionality behind a new API version, care must still be taken to not introduce unnescessary changes that cause friction for clients to adopt the new version. For example, the introduction of a new property in a response is a change that can easily be handled by a client that opts in to new functionality, whereas changing the structure of responses, removal of properties or change in semantics for the same input are all significantly harder to absorb.
+While some developers, particularly early adopters of a service, may be more willing to accept these kind of changes, we know from years of experience from Windows and .NET that the majority of developers are not.
 
 *The consequence of services making changes that are difficult for clients to absorb is that developers feel like Azure is difficult to write applications for due to breaking changes between API versions.*
 
@@ -34,7 +35,6 @@ Type of changes:
 |Making optional field in request required|2|Existing clients have to provide the new value. 
 |Removal of field in response|2|
 |Change unit of field from seconds to minutes|2|
-|Add enum value in response|1|TODO: argue why this is a 1 and not a 2.
 
 ### Issues with the current service API guidance
 
@@ -54,9 +54,9 @@ From a customer's perspective, a date based versioning scheme does not carry any
 
 > NOTE: This is primarily an issue where we have "contractual or semantical breaking changes" between api versions, since if the only changes we introduce even between service api versions are additive, there is no need to signal larger changes between API versions.
 
-### Client library specific issues with the current service API guidance
+### Client library specific issues with the earlier service API guidance
 
-The current official versioning guidelines state that each new API version corresponds to a new major version of a client library. This has several challenges:
+The previous official versioning guidelines state that each new API version corresponds to a new major version of a client library. This has several challenges:
 
 - Many languages/runtimes are unable to load multiple versions of the same library in the same process.
 - New major library versions cause great disruption in those ecosystems and should be avoided. One of the most common issues is the diamond reference problem where all libraries have to agree on the one and only version they reference.
@@ -65,23 +65,21 @@ The current official versioning guidelines state that each new API version corre
 
 For example, [azure-mgmt-storage](https://pypi.org/project/azure-mgmt-storage/8.0.0/) for Python has had 5 major version changes since 2019.
 
-### Current SDK versioning proposal
+### Updated SDK versioning proposal
 
-The current Azure SDK client library proposal is to add support for multiple service api versions in a single library. By default, the latest service API version at the point of the release of the library is used, but a developer can opt in to earlier API versions.
+In order to address the issues listed above, the updated Azure SDK client library proposal is to, instead of introducing a new major library version for a new API version, add support for multiple service api versions in a single library. By default, the latest service API version at the point of the release of the library is used, but a developer can opt in to earlier API versions.
 
-The tolerance for changes that may break a small subset of customers is higher between versions of a client library than for a service api since a developer/customer has to make an explicit change to their application in order to reference a new version of a library. This allows them to properly change their application before deploying it into production.
+It is worth pointing out that the tolerance for changes that may break a small subset of customers is higher between versions of a client library than for a service api since a developer/customer has to make an explicit change to their application in order to reference a new version of a library. This allows a customer to properly change their application on their own schedule before deploying it into production.
 
-The ability to support multiple API versions is dependent on services not regularly making large *contract or semantical breaking changes*. There is a strong correlation between changes that are difficult to abstract away in a client library that supports multiple API versions and changes that would cause friction in updating to a new version of a client library.
+The proposal is not entirely without issues. The ability to support multiple API versions is dependent on services not regularly making large *contract or semantical breaking changes* since those types of changes would be hard to abstract away in a client library. However, this class of changes would be problematic in the prvious proposal as well, since there is a strong correlation between changes that are difficult to abstract away in a client library that supports multiple API versions and changes that would cause friction in updating to a new version of a client library.
 
-> TODO: Should we add more examples here?
-
-### Proposed changes to guidance and documentation
+## Proposed changes to guidance and documentation
 
 The proposed changes below are in addition to providing more tooling to both help review and detect changes as they are deployed. It is fully understood that guidance alone does not solve the problem.
 
 #### Update the terminology in guidance from "breaking" to "changes that require a new API version".
 
-> TODO: better name, please...
+> TODO: I'd love to get proposals of better names, please...
 
 Teams assume they understand what breaking means without reading our guidelines. And they often use the incorrect definition of the term.
 
